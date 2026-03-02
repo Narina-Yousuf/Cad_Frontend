@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import { useAuth } from "../../context/useAuth";
 import { FileDropzone } from "../../components/upload/FileDropzone";
 import { uploadECG } from "../../services/ecg.service";
-import { HeartPulse } from "lucide-react";
+import { HeartPulse, UploadCloud, FileType, CheckCircle2, Info } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function PatientUploadECG() {
-  //   const { user } = useAuth();
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -18,72 +16,116 @@ export default function PatientUploadECG() {
 
     const formData = new FormData();
     formData.append("ecgFile", file);
-    // No patientId needed here - backend gets it from the token
 
     try {
       setUploading(true);
       const result = await uploadECG(formData, (p) => setProgress(p));
-      toast.success("ECG Uploaded Successfully");
+      toast.success("Signal Sync Complete");
       navigate(`/patient/analyze/${result.id}`);
     } catch (err) {
-      toast.error("Upload failed. Please check the file format.");
-      console.log(err);
+      toast.error("Format mismatch. Please use approved clinical file types.");
       setUploading(false);
+      setProgress(0);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-8">
-      <div className="text-center">
-        <div className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <HeartPulse className="text-blue-600 w-8 h-8" />
+    <div className="max-w-3xl mx-auto p-4 md:p-12 space-y-10 bg-slate-50/30 min-h-screen animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="text-center space-y-4">
+        <div className="bg-white w-20 h-20 rounded-[2rem] shadow-xl shadow-blue-900/5 flex items-center justify-center mx-auto mb-6 border border-slate-100 group transition-transform hover:scale-110">
+          <HeartPulse className="text-[#0ea5e9] w-10 h-10 animate-pulse" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Upload Your ECG</h1>
-        <p className="text-gray-500">
-          Monitor your heart health by uploading your latest ECG recording.
+        <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">
+          Upload <span className="text-[#0ea5e9]">Cardiac Data</span>
+        </h1>
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] max-w-sm mx-auto leading-relaxed">
+          Provide your digitized ECG recording for neural network CAD screening.
         </p>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <FileDropzone
-          onFileSelect={(f) => setFile(f)}
-          error={file ? undefined : "Accepted: .csv, .mat, .txt"}
-        />
+      <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl shadow-blue-900/10 border border-slate-100 relative overflow-hidden">
+        {/* Decorative Background Icon */}
+        <UploadCloud className="absolute -right-8 -top-8 w-40 h-40 text-slate-50 opacity-50" />
 
-        {file && !uploading && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl flex items-center justify-between">
-            <span className="text-sm font-medium truncate">{file.name}</span>
+        <div className="relative z-10">
+          <FileDropzone
+            onFileSelect={(f) => setFile(f)}
+            error={file ? undefined : "Awaiting: .CSV, .MAT, or .TXT"}
+          />
+
+          {file && !uploading && (
+            <div className="mt-8 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-between animate-in slide-in-from-bottom-4">
+              <div className="flex items-center gap-4 truncate">
+                <div className="p-3 bg-sky-500 rounded-xl text-white">
+                  <FileType size={20} />
+                </div>
+                <div className="truncate">
+                  <p className="text-sm font-black text-slate-900 truncate tracking-tight uppercase italic">
+                    {file.name}
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    {(file.size / 1024).toFixed(1)} KB • Ready for processing
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setFile(null)}
+                className="text-rose-500 text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+          )}
+
+          {uploading ? (
+            <div className="mt-10 space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-sky-500 rounded-full animate-ping" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-600">
+                    Transmitting to Neural Core
+                  </span>
+                </div>
+                <span className="text-lg font-black italic text-slate-900">
+                  {progress}%
+                </span>
+              </div>
+              <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5">
+                <div
+                  className="bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full transition-all duration-300 shadow-[0_0_12px_rgba(14,165,233,0.4)]"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          ) : (
             <button
-              onClick={() => setFile(null)}
-              className="text-red-500 text-xs font-bold"
+              onClick={handleUpload}
+              disabled={!file}
+              className="w-full mt-10 bg-[#0ea5e9] hover:bg-[#7cc9ed] text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-slate-900/20 disabled:cursor-not-allowed transition-all uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-3 active:scale-[0.98]"
             >
-              Change
+              <CheckCircle2 size={18} /> Submit for Analysis
             </button>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
 
-        {uploading ? (
-          <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-xs font-bold uppercase text-blue-600">
-              <span>Uploading Data...</span>
-              <span>{progress}%</span>
-            </div>
-            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-blue-600 h-full transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={handleUpload}
-            disabled={!file}
-            className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 transition-all"
-          >
-            Submit for Analysis
-          </button>
-        )}
+      {/* Technical Specifications Advisory */}
+      
+      <div className="bg-sky-50/50 p-8 rounded-[2.5rem] border border-sky-100 flex flex-col md:flex-row gap-6 items-center">
+        <div className="p-4 bg-white rounded-2xl shadow-sm border border-sky-100">
+          <Info className="text-sky-500" size={24} />
+        </div>
+        <div className="space-y-1">
+          <h4 className="text-slate-900 font-black uppercase tracking-widest text-xs">
+            Data Requirements
+          </h4>
+          <p className="text-slate-400 text-[11px] leading-relaxed font-bold uppercase tracking-tight">
+            For optimal accuracy, ensure your signal is sampled at minimum 
+            <span className="text-sky-600 mx-1">250Hz</span> and contains at least 
+            <span className="text-sky-600 mx-1">10 seconds</span> of continuous Lead II recording.
+          </p>
+        </div>
       </div>
     </div>
   );

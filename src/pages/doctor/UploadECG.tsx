@@ -12,6 +12,7 @@ import {
   Activity,
   FileUp,
   ShieldCheck,
+  Fingerprint,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -29,14 +30,14 @@ export default function UploadECG() {
     if (user?.role === "DOCTOR") {
       getPatients()
         .then(setPatients)
-        .catch(() => toast.error("Failed to load patients"));
+        .catch(() => toast.error("Failed to load patient records"));
     }
   }, [user]);
 
   const handleUpload = async () => {
     if (!file) return;
     if (user?.role === "DOCTOR" && !selectedPatient) {
-      return toast.error("Please select a patient");
+      return toast.error("Please assign this signal to a patient");
     }
 
     const formData = new FormData();
@@ -47,34 +48,34 @@ export default function UploadECG() {
       setUploading(true);
       const result = await uploadECG(formData, (p) => setProgress(p));
       setSuccess(true);
-      toast.success("Upload successful!");
+      toast.success("Signal ingestion successful");
       setTimeout(
         () => navigate(`/${user?.role.toLowerCase()}/signal/${result.id}`),
-        2000,
+        1800,
       );
     } catch (err) {
-      toast.error("Upload failed");
-      console.log(err);
+      toast.error("Network upload error");
       setUploading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
-      {/* Decorative background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-[#7c5dfa]/10 blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-700 font-sans relative overflow-hidden">
+      {/* Structural background elements */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-100 via-sky-400 to-blue-100 opacity-50" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-sky-200/20 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="w-full max-w-2xl relative z-10">
-        {/* Header - Centered & Clean */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center p-3 bg-[#7c5dfa]/10 rounded-2xl mb-4 border border-[#7c5dfa]/20">
-            <Activity className="text-[#7c5dfa] w-8 h-8" />
+        {/* Portal Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center p-4 bg-white rounded-3xl shadow-xl shadow-sky-900/5 mb-6 border border-slate-100">
+            <Activity className="text-[#0ea5e9] w-10 h-10" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">
-            Analyze <span className="text-[#7c5dfa]">Signal</span>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase ">
+            Analyze <span className="text-[#0ea5e9]">ECG Signal</span>
           </h1>
-          <p className="text-[#94a3b8] font-bold text-[10px] uppercase tracking-[0.3em] mt-3 opacity-60">
-            Neural Network Ingestion Portal
+          <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] mt-4 flex items-center justify-center gap-2">
+            <Fingerprint size={12} /> Encrypted Diagnostic Entry Point
           </p>
         </div>
 
@@ -82,73 +83,76 @@ export default function UploadECG() {
           <div className="space-y-6">
             {/* STEP 1: DROPZONE */}
             <div
-              className={`bg-[#252541] rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden transition-all duration-500 ${file ? "opacity-50 scale-95 blur-[1px]" : "scale-100 opacity-100"}`}
+              className={`bg-white rounded-[3rem] border-2 border-slate-100 shadow-2xl shadow-blue-900/5 transition-all duration-500 ${
+                file ? "opacity-40 scale-95 blur-[2px] pointer-events-none" : "scale-100 opacity-100"
+              }`}
             >
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-full bg-[#1a1a2e] flex items-center justify-center text-[10px] font-black text-[#7c5dfa] border border-[#7c5dfa]/30">
+              <div className="p-10">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-[11px] font-black text-white shadow-lg">
                     01
                   </div>
-                  <h3 className="text-white font-black uppercase tracking-widest text-xs">
-                    Select Data Source
+                  <h3 className="text-slate-900 font-black uppercase tracking-[0.2em] text-[11px]">
+                    Initialize Data Stream
                   </h3>
                 </div>
                 <FileDropzone
                   onFileSelect={(f) => {
                     if (f.size > 50 * 1024 * 1024)
-                      toast.error("File exceeds 50MB limit");
+                      toast.error("Maximum payload exceeded (50MB)");
                     else setFile(f);
                   }}
-                  error={file ? undefined : "CSV, MAT, or TXT"}
+                  error={file ? undefined : "Format: .CSV, .MAT, .TXT"}
                 />
               </div>
             </div>
 
-            {/* STEP 2: CONFIGURATION (Appears after file select) */}
+            {/* STEP 2: CONFIGURATION */}
             {file && !uploading && (
-              <div className="bg-[#252541] rounded-[2.5rem] border border-[#7c5dfa]/30 shadow-2xl animate-in slide-in-from-bottom-8 duration-500">
-                <div className="p-8 space-y-8">
+              <div className="bg-white rounded-[3rem] border-2 border-[#0ea5e9]/30 shadow-2xl shadow-sky-500/10 animate-in slide-in-from-bottom-12 duration-500 overflow-hidden">
+                <div className="p-10 space-y-10">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#7c5dfa] flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-[#7c5dfa]/20">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-[#0ea5e9] flex items-center justify-center text-[11px] font-black text-white shadow-lg shadow-sky-500/20">
                         02
                       </div>
-                      <h3 className="text-white font-black uppercase tracking-widest text-xs">
-                        Finalize Metadata
+                      <h3 className="text-slate-900 font-black uppercase tracking-[0.2em] text-[11px]">
+                        Parameter Validation
                       </h3>
                     </div>
                     <button
                       onClick={() => setFile(null)}
-                      className="text-red-400 hover:bg-red-500/10 p-2 rounded-xl transition-all"
+                      className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-all"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={20} />
                     </button>
                   </div>
 
-                  <div className="bg-[#1a1a2e] p-6 rounded-2xl border border-white/5 flex items-center gap-4">
-                    <FileUp className="text-[#7c5dfa]" />
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 flex items-center gap-5">
+                    <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100">
+                      <FileUp className="text-[#0ea5e9]" size={24} />
+                    </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className="text-white font-black text-sm truncate uppercase tracking-tighter">
+                      <p className="text-slate-900 font-black text-sm truncate uppercase tracking-tight">
                         {file.name}
                       </p>
-                      <p className="text-[10px] text-[#94a3b8] font-bold">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB • READY
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB • READY FOR BUFFER
                       </p>
                     </div>
                   </div>
 
                   {user?.role === "DOCTOR" && (
                     <div className="space-y-4">
-                      <label className="flex items-center gap-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest ml-1">
-                        <User size={12} className="text-[#7c5dfa]" /> Target
-                        Patient
+                      <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">
+                        <User size={14} className="text-[#0ea5e9]" /> Target Clinical Record
                       </label>
                       <select
-                        className="w-full p-5 bg-[#1a1a2e] border border-white/5 text-white rounded-2xl focus:border-[#7c5dfa] outline-none transition-all font-black text-xs uppercase tracking-widest appearance-none cursor-pointer"
+                        className="w-full p-6 bg-slate-50 border-2 border-transparent focus:border-[#0ea5e9]/20 focus:bg-white text-slate-900 rounded-3xl outline-none transition-all font-black text-xs uppercase tracking-widest appearance-none cursor-pointer shadow-inner"
                         value={selectedPatient}
                         onChange={(e) => setSelectedPatient(e.target.value)}
                       >
-                        <option value="">Select Identity...</option>
+                        <option value="">Choose Patient Identity...</option>
                         {patients.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}
@@ -160,10 +164,10 @@ export default function UploadECG() {
 
                   <button
                     onClick={handleUpload}
-                    className="w-full bg-[#7c5dfa] hover:bg-[#9277ff] text-white font-black py-5 rounded-2xl shadow-xl shadow-[#7c5dfa]/20 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] hover:-translate-y-1 active:scale-95"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-6 rounded-3xl shadow-xl shadow-slate-900/10 transition-all flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-[11px] group"
                   >
-                    Start Neural Analysis
-                    <ArrowRight size={16} />
+                    Execute AI Processing
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -171,26 +175,26 @@ export default function UploadECG() {
 
             {/* PROGRESS STATE */}
             {uploading && (
-              <div className="bg-[#252541] rounded-[2.5rem] border border-white/5 p-12 text-center shadow-2xl animate-in zoom-in-95">
-                <div className="relative inline-flex mb-8">
-                  <Loader2 size={48} className="text-[#7c5dfa] animate-spin" />
-                  <div className="absolute inset-0 blur-xl bg-[#7c5dfa]/30 animate-pulse rounded-full" />
+              <div className="bg-white rounded-[3rem] border border-slate-100 p-16 text-center shadow-2xl shadow-blue-900/5 animate-in zoom-in-95">
+                <div className="relative inline-flex mb-10">
+                  <Loader2 size={64} className="text-[#0ea5e9] animate-spin" />
+                  <div className="absolute inset-0 blur-2xl bg-sky-400/20 animate-pulse rounded-full" />
                 </div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">
-                  Ingesting Signal
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2 italic">
+                  Stream Ingesting
                 </h3>
-                <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.2em] mb-10">
-                  Data transmission in progress
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">
+                  Transmitting high-fidelity morphological data
                 </p>
 
-                <div className="space-y-4">
-                  <div className="w-full bg-[#1a1a2e] h-3 rounded-full p-[2px] border border-white/5 overflow-hidden">
+                <div className="space-y-6">
+                  <div className="w-full bg-slate-100 h-4 rounded-full p-1 shadow-inner overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#7c5dfa] to-[#9277ff] rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(124,93,250,0.5)]"
+                      className="h-full bg-gradient-to-r from-[#0ea5e9] to-[#38bdf8] rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(14,165,233,0.3)]"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <span className="text-3xl font-black text-white italic">
+                  <span className="text-5xl font-black text-slate-900 italic tabular-nums">
                     {progress}%
                   </span>
                 </div>
@@ -199,23 +203,25 @@ export default function UploadECG() {
           </div>
         ) : (
           /* SUCCESS STATE */
-          <div className="bg-[#252541] rounded-[3rem] border border-white/5 p-16 text-center shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl" />
-            <div className="bg-emerald-500/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-emerald-500/20">
-              <ShieldCheck className="text-emerald-400 w-10 h-10" />
+          <div className="bg-white rounded-[4rem] border border-slate-100 p-20 text-center shadow-2xl shadow-emerald-500/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
+            <div className="bg-emerald-50 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-10 border-2 border-emerald-100">
+              <ShieldCheck className="text-emerald-500 w-12 h-12" />
             </div>
-            <h2 className="text-3xl font-black text-white tracking-tighter uppercase mb-3">
-              Transmission Secure
+            <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic mb-4">
+              Buffer Synchronized
             </h2>
-            <p className="text-[#94a3b8] font-bold uppercase tracking-widest text-[10px]">
-              Initialization Complete. Loading visualization...
+            <p className="text-slate-400 font-bold uppercase tracking-[0.3em] text-[11px]">
+              Security Handshake Complete. Initializing Dashboard...
             </p>
           </div>
         )}
 
-        <footer className="mt-12 text-center opacity-20">
-          <p className="text-[9px] font-black text-[#94a3b8] uppercase tracking-[0.4em]">
-            Secure End-to-End Encryption Enabled
+        <footer className="mt-16 text-center">
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em] flex items-center justify-center gap-3">
+            <span className="w-12 h-[1px] bg-slate-200" /> 
+            AES-256 Medical Grade Encryption 
+            <span className="w-12 h-[1px] bg-slate-200" />
           </p>
         </footer>
       </div>

@@ -6,6 +6,9 @@ import {
   MoreVertical,
   FileClock,
   Filter,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { getHistory } from "../../services/history.service";
 import type { HistoryRecord, HistoryFilters } from "../../types/history.types";
@@ -24,7 +27,7 @@ export default function History() {
   });
 
   const [pagination, setPagination] = useState({
-    limit: 10, // Reduced for better UI visibility
+    limit: 10,
     offset: 0,
     total: 0,
   });
@@ -70,91 +73,89 @@ export default function History() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 bg-[#1a1a2e] min-h-screen animate-in fade-in duration-500">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 bg-slate-50/30 min-h-screen animate-in fade-in duration-700 font-sans">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3 leading-none">
-            <FileClock className="text-[#7c5dfa]" /> Analysis History
-          </h1>
-          <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.2em] mt-2">
-            Global diagnostic logs across all patients
+          <div className="flex items-center gap-3 mb-2">
+             <div className="p-2 bg-blue-50 rounded-lg">
+                <FileClock className="text-[#0ea5e9] w-6 h-6" />
+             </div>
+             <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">
+               Archive <span className="text-[#0ea5e9]">Logs</span>
+             </h1>
+          </div>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.25em] ml-1">
+            Global diagnostic synchronization across all patient endpoints
           </p>
         </div>
 
         <div className="flex w-full md:w-auto gap-3">
-          <div className="relative flex-1 md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8] w-4 h-4" />
+          <div className="relative flex-1 md:w-80 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#0ea5e9] w-4 h-4 transition-colors" />
             <input
               type="text"
-              placeholder="Search patient name..."
-              className="w-full pl-12 pr-4 py-3 bg-[#252541] border border-white/5 rounded-2xl text-white outline-none focus:border-[#7c5dfa] transition-all placeholder:text-[#94a3b8]/30 font-medium"
+              placeholder="Filter by patient name..."
+              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[1.25rem] text-slate-700 outline-none focus:border-[#0ea5e9] focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-slate-300 font-bold text-xs uppercase tracking-wider shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7c5dfa] w-3 h-3" />
             <select
-              className="appearance-none bg-[#252541] border border-white/5 rounded-2xl pl-8 pr-10 py-3 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-[#7c5dfa] transition-all cursor-pointer"
+              className="appearance-none bg-white border border-slate-200 rounded-[1.25rem] pl-6 pr-12 py-4 text-[10px] font-black text-slate-600 uppercase tracking-widest outline-none focus:border-[#0ea5e9] transition-all cursor-pointer shadow-sm"
               value={filters.result}
               onChange={(e) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setFilters({ ...filters, result: e.target.value as any })
               }
             >
-              <option value="all">All Results</option>
+              <option value="all">Status: All</option>
               <option value="cad">CAD Detected</option>
               <option value="normal">Normal</option>
             </select>
+            <Filter className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3 pointer-events-none" />
           </div>
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="bg-[#252541] rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] shadow-xl shadow-blue-900/5 border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-[#1a1a2e]/50 text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.2em]">
+            <thead className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
               <tr>
                 <th
-                  className="px-8 py-5 cursor-pointer hover:text-white transition-colors"
+                  className="px-8 py-6 cursor-pointer hover:text-slate-900 transition-colors"
                   onClick={() => toggleSort("date")}
                 >
                   <div className="flex items-center gap-2">
-                    Analysis Date{" "}
-                    <ArrowUpDown size={12} className="text-[#7c5dfa]" />
+                    Analysis Date
+                    <ArrowUpDown size={12} className="text-[#0ea5e9]" />
                   </div>
                 </th>
-                <th className="px-8 py-5 uppercase tracking-[0.2em]">
-                  Patient Details
-                </th>
-                <th className="px-8 py-5 uppercase tracking-[0.2em]">
-                  Diagnosis
-                </th>
+                <th className="px-8 py-6">Patient Identification</th>
+                <th className="px-8 py-6">Clinical Verdict</th>
                 <th
-                  className="px-8 py-5 cursor-pointer hover:text-white transition-colors uppercase tracking-[0.2em]"
+                  className="px-8 py-6 cursor-pointer hover:text-slate-900 transition-colors"
                   onClick={() => toggleSort("confidence")}
                 >
                   <div className="flex items-center gap-2">
-                    AI Confidence{" "}
-                    <ArrowUpDown size={12} className="text-[#7c5dfa]" />
+                    AI Confidence
+                    <ArrowUpDown size={12} className="text-[#0ea5e9]" />
                   </div>
                 </th>
-                <th className="px-8 py-5 uppercase tracking-[0.2em]">
-                  Source File
-                </th>
-                <th className="px-8 py-5"></th>
+                <th className="px-8 py-6">Reference File</th>
+                <th className="px-8 py-6"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-24 text-center">
+                  <td colSpan={6} className="p-32 text-center">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="animate-spin w-8 h-8 border-4 border-[#7c5dfa] border-t-transparent rounded-full" />
-                      <span className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">
-                        Retrieving Secure Records...
+                      <Loader2 className="animate-spin w-8 h-8 text-[#0ea5e9]" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                        Decrypting Secure Archives...
                       </span>
                     </div>
                   </td>
@@ -163,58 +164,61 @@ export default function History() {
                 history.map((record) => (
                   <tr
                     key={record.analysisId}
-                    className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
+                    className="hover:bg-blue-50/30 transition-all group cursor-pointer"
                     onClick={() => navigate(`/doctor/result/${record.ecgId}`)}
                   >
-                    <td className="px-8 py-6 text-sm font-bold text-[#94a3b8]">
+                    <td className="px-8 py-8 text-xs font-bold text-slate-500 tabular-nums">
                       {new Date(record.date).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
                       })}
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="font-black text-white group-hover:text-[#7c5dfa] transition-colors uppercase tracking-tight">
+                    <td className="px-8 py-8">
+                      <div className="font-black text-slate-900 group-hover:text-[#0ea5e9] transition-colors uppercase tracking-tight text-sm">
                         {record.patientName}
                       </div>
-                      <div className="text-[10px] text-[#94a3b8]/60 font-black uppercase tracking-widest mt-1">
+                      <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">
                         ID: {record.patientId.slice(0, 8)}
                       </div>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-8 py-8">
                       <span
-                        className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] border ${
+                        className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border shadow-sm ${
                           record.result === "CAD Detected"
-                            ? "bg-red-500/10 text-red-400 border-red-500/20"
-                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            ? "bg-red-50 text-red-600 border-red-100"
+                            : "bg-emerald-50 text-emerald-600 border-emerald-100"
                         }`}
                       >
                         {record.result}
                       </span>
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="text-sm font-black text-white leading-none">
-                        {record.confidence}
-                      </div>
-                      <div className="w-12 bg-white/5 h-1 rounded-full mt-2">
-                        <div
-                          className="bg-[#7c5dfa] h-full rounded-full shadow-[0_0_8px_rgba(124,93,250,0.5)]"
-                          style={{ width: record.confidence }}
-                        />
+                    <td className="px-8 py-8">
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-black text-slate-900 leading-none tabular-nums">
+                          {record.confidence}
+                        </span>
+                        <div className="flex-1 max-w-[80px] bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="bg-[#0ea5e9] h-full rounded-full shadow-[0_0_8px_rgba(14,165,233,0.4)]"
+                            style={{ width: record.confidence }}
+                          />
+                        </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-[10px] font-black text-[#94a3b8] uppercase tracking-tighter truncate max-w-[120px]">
-                      {record.fileName}
+                    <td className="px-8 py-8 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                      <span className="bg-slate-50 px-2 py-1 rounded border border-slate-100 group-hover:bg-white transition-colors">
+                        {record.fileName.length > 15 ? `${record.fileName.slice(0, 15)}...` : record.fileName}
+                      </span>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-8 py-8 text-right">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Additional actions like delete or download report
                         }}
-                        className="p-2.5 bg-[#1a1a2e] border border-white/5 rounded-xl text-[#94a3b8] hover:text-[#7c5dfa] transition-all hover:scale-110"
+                        className="p-3 bg-white border border-slate-100 rounded-[1rem] text-slate-300 hover:text-[#0ea5e9] hover:border-[#0ea5e9]/30 transition-all shadow-sm group-hover:bg-white"
                       >
-                        <MoreVertical size={14} />
+                        <MoreVertical size={16} />
                       </button>
                     </td>
                   </tr>
@@ -223,9 +227,12 @@ export default function History() {
             </tbody>
           </table>
           {!loading && history.length === 0 && (
-            <div className="p-24 text-center">
-              <p className="text-[#94a3b8] font-black uppercase tracking-widest text-[10px]">
-                No clinical records found matching your criteria.
+            <div className="p-32 text-center bg-slate-50/20">
+              <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100">
+                 <FileClock className="text-slate-200 w-10 h-10" />
+              </div>
+              <p className="text-slate-400 font-black uppercase tracking-widest text-xs">
+                No clinical records match the current filter criteria.
               </p>
             </div>
           )}
@@ -233,12 +240,12 @@ export default function History() {
       </div>
 
       {/* Pagination Container */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest px-4">
-        <p>
-          Showing {history.length} of{" "}
-          <span className="text-white">{pagination.total}</span> records
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 px-4">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+          Displaying <span className="text-slate-900">{history.length}</span> of{" "}
+          <span className="text-slate-900">{pagination.total}</span> global records
         </p>
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <button
             disabled={pagination.offset === 0}
             onClick={() =>
@@ -247,18 +254,18 @@ export default function History() {
                 offset: Math.max(0, p.offset - p.limit),
               }))
             }
-            className="px-8 py-3 bg-[#252541] border border-white/5 rounded-xl text-white font-black hover:bg-[#7c5dfa] transition-all disabled:opacity-10 disabled:grayscale"
+            className="flex items-center gap-2 px-6 py-3 bg-[#0ea5e9] border-slate-200 rounded-xl text-slate-600 font-black uppercase text-[10px] tracking-widest hover:border-[#7bcaee]  hover:text-white transition-all shadow-sm "
           >
-            Previous
+            <ChevronLeft size={14} /> Previous
           </button>
           <button
             disabled={pagination.offset + pagination.limit >= pagination.total}
             onClick={() =>
               setPagination((p) => ({ ...p, offset: p.offset + p.limit }))
             }
-            className="px-8 py-3 bg-[#252541] border border-white/5 rounded-xl text-white font-black hover:bg-[#7c5dfa] transition-all disabled:opacity-10 disabled:grayscale"
+            className="flex items-center gap-2 px-6 py-3 bg-[#0ea5e9] border-slate-200 rounded-xl text-slate-600 font-black uppercase text-[10px] tracking-widest hover:border-[#71c5ec] hover:text-white transition-all shadow-sm"
           >
-            Next
+            Next <ChevronRight size={14} />
           </button>
         </div>
       </div>

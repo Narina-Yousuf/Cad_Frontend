@@ -8,6 +8,8 @@ import {
   Calendar,
   ShieldCheck,
   ShieldAlert,
+  Fingerprint,
+  Download,
 } from "lucide-react";
 import { getReport } from "../../services/report.service";
 import type { ReportData } from "../../types/report.types";
@@ -23,7 +25,7 @@ export default function PatientReportPage() {
     if (id) {
       getReport(id)
         .then(setReport)
-        .catch(() => toast.error("Failed to load your health report"))
+        .catch(() => toast.error("Failed to sync clinical report"))
         .finally(() => setLoading(false));
     }
   }, [id]);
@@ -32,148 +34,168 @@ export default function PatientReportPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#1a1a2e] flex flex-col items-center justify-center p-20 text-center">
-        <div className="animate-spin w-10 h-10 border-4 border-[#7c5dfa] border-t-transparent rounded-full mb-4" />
-        <span className="text-[#94a3b8] font-black uppercase tracking-widest text-xs">
-          Preparing your report...
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-20 text-center">
+        <div className="relative mb-6">
+          <div className="animate-spin w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full" />
+          <Heart className="absolute inset-0 m-auto w-5 h-5 text-sky-500 animate-pulse" />
+        </div>
+        <span className="text-slate-400 font-black uppercase tracking-[0.3em] text-[10px]">
+          Rendering Health Record...
         </span>
       </div>
     );
 
   if (!report)
     return (
-      <div className="p-20 text-center bg-[#1a1a2e] text-white">
-        Report not found.
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-900 font-black uppercase tracking-widest">
+        Record not found.
       </div>
     );
 
   const isCAD = report.analysisResult.isCADDetected;
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] py-8 px-4 sm:px-6 animate-in fade-in duration-500">
-      {/* Patient Toolbar - Amethyst Theme */}
-      <div className="max-w-3xl mx-auto mb-8 flex justify-between items-center no-print">
+    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 animate-in fade-in duration-700 font-sans">
+      {/* Patient Utility Toolbar */}
+      <div className="max-w-4xl mx-auto mb-10 flex flex-col sm:flex-row justify-between items-center gap-6 no-print">
         <button
           onClick={() => navigate("/patient/dashboard")}
-          className="group flex items-center gap-2 text-[#94a3b8] font-black uppercase text-[10px] tracking-widest hover:text-white transition-all"
+          className="group flex items-center gap-3 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] hover:text-slate-900 transition-all"
         >
-          <div className="p-2 bg-[#252541] rounded-lg group-hover:bg-[#7c5dfa]/10">
-            <ArrowLeft size={16} />
+          <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:border-sky-200 group-hover:bg-sky-50">
+            <ArrowLeft size={18} />
           </div>
-          Dashboard
+          Back to Dashboard
         </button>
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 bg-[#7c5dfa] text-white px-6 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-[#9277ff] shadow-xl shadow-[#7c5dfa]/20 transition-all active:scale-95"
-        >
-          <Printer size={18} /> Print for Doctor
-        </button>
+        
+        <div className="flex gap-4">
+            <button
+            onClick={handlePrint}
+            className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 transition-all active:scale-95"
+            >
+            <Printer size={18} /> Export PDF / Print
+            </button>
+        </div>
       </div>
 
-      {/* The Medical Report Document - High Contrast for Print */}
+      {/* The Medical Report Document */}
       <div
         id="report-content"
-        className="max-w-3xl mx-auto bg-white border border-white/5 p-8 md:p-14 rounded-[2.5rem] shadow-2xl text-slate-900 print:shadow-none print:border-none print:p-0 print:rounded-none"
+        className="max-w-4xl mx-auto bg-white border border-slate-100 p-10 md:p-20 rounded-[3.5rem] shadow-2xl shadow-blue-900/5 text-slate-900 print:shadow-none print:border-none print:p-0 print:rounded-none relative overflow-hidden"
       >
+        {/* Document Watermark for Screen */}
+        <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none no-print">
+            <Fingerprint size={240} />
+        </div>
+
         {/* Header Section */}
-        <div className="flex justify-between items-start mb-12 pb-8 border-b-2 border-slate-100">
+        <div className="flex justify-between items-start mb-16 pb-10 border-b-2 border-slate-50 relative z-10">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase leading-none mb-2">
-              Heart Health Summary
-            </h1>
-            <div className="flex items-center gap-6 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+            <div className="flex items-center gap-3 mb-4">
+                <div className="w-2 h-8 bg-sky-500 rounded-full" />
+                <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">
+                    Diagnostic <span className="text-sky-500">Summary</span>
+                </h1>
+            </div>
+            <div className="flex items-center gap-8 text-[11px] text-slate-400 font-black uppercase tracking-widest">
               <span className="flex items-center gap-2">
-                <Calendar size={14} className="text-slate-300" />
+                <Calendar size={15} className="text-sky-400" />
                 {new Date(report.generatedDate).toLocaleDateString(undefined, {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
                 })}
               </span>
-              <span>Ref ID: {report.id.slice(0, 10).toUpperCase()}</span>
+              <span className="flex items-center gap-2">
+                <Info size={15} className="text-sky-400" />
+                ID: {report.id.slice(0, 12).toUpperCase()}
+              </span>
             </div>
           </div>
           <div
-            className={`p-4 rounded-2xl ${isCAD ? "bg-orange-50 text-orange-500" : "bg-emerald-50 text-emerald-500"}`}
+            className={`p-6 rounded-[2rem] shadow-inner ${isCAD ? "bg-rose-50 text-rose-500" : "bg-emerald-50 text-emerald-500"}`}
           >
-            <Heart className="w-10 h-10 fill-current" />
+            <Heart className="w-12 h-12 fill-current" />
           </div>
         </div>
 
-        {/* Diagnostic Highlight */}
+        {/* Primary Conclusion Card */}
         <div
-          className={`rounded-3xl p-8 mb-10 border-2 shadow-sm ${
+          className={`rounded-[2.5rem] p-10 mb-12 border-2 relative z-10 ${
             isCAD
-              ? "bg-orange-50/50 border-orange-200 shadow-orange-500/5"
-              : "bg-emerald-50/50 border-emerald-200 shadow-emerald-500/5"
+              ? "bg-rose-50/30 border-rose-100 shadow-xl shadow-rose-900/5"
+              : "bg-emerald-50/30 border-emerald-100 shadow-xl shadow-emerald-900/5"
           }`}
         >
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-6">
             {isCAD ? (
-              <ShieldAlert className="text-orange-600" />
+              <div className="p-3 bg-rose-500 rounded-2xl shadow-lg shadow-rose-500/20">
+                <ShieldAlert className="text-white" />
+              </div>
             ) : (
-              <ShieldCheck className="text-emerald-600" />
+              <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg shadow-emerald-500/20">
+                <ShieldCheck className="text-white" />
+              </div>
             )}
             <h2
-              className={`text-2xl font-black uppercase tracking-tight ${isCAD ? "text-orange-700" : "text-emerald-700"}`}
+              className={`text-3xl font-black uppercase tracking-tighter italic ${isCAD ? "text-rose-900" : "text-emerald-900"}`}
             >
-              Result: {isCAD ? "Action Recommended" : "Healthy Rhythm"}
+              Outcome: {isCAD ? "Positive Detection" : "No CAD Detected"}
             </h2>
           </div>
-          <p className="text-slate-700 font-medium leading-relaxed text-lg">
+          <p className="text-slate-700 font-bold leading-relaxed text-lg italic pr-12">
             {isCAD
-              ? "Our neural engine has identified indicators consistent with Coronary Artery Disease. This finding requires professional clinical validation. Please present this report to a cardiologist."
-              : "Good news: The AI analysis did not detect significant indicators of Coronary Artery Disease in this specific ECG reading."}
+              ? "The Neural Analysis Core has identified morphological markers indicative of Coronary Artery Disease. Clinical correlation by a certified specialist is mandatory."
+              : "Analysis complete. Waveform patterns are within standard physiological ranges. No significant indicators of Coronary Artery Disease detected."}
           </p>
         </div>
 
-        {/* Information Grid */}
-        <div className="grid grid-cols-2 gap-8 mb-12">
-          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
-              Patient
+        {/* Meta Data Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 relative z-10">
+          <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">
+              Patient Identification
             </p>
-            <p className="text-xl font-black text-slate-900">
+            <p className="text-2xl font-black text-slate-900 italic uppercase tracking-tight">
               {report.patientInfo.name}
             </p>
-            <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wider">
-              {report.patientInfo.age} Yrs • {report.patientInfo.gender}
+            <p className="text-[11px] font-black text-sky-600 mt-2 uppercase tracking-[0.2em]">
+              {report.patientInfo.age} Years • {report.patientInfo.gender}
             </p>
           </div>
-          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
-              Source Facility
+          <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">
+              Clinical Context
             </p>
-            <p className="text-xl font-black text-slate-900">
-              {report.doctor?.hospitalName || "Personal Upload"}
+            <p className="text-2xl font-black text-slate-900 italic uppercase tracking-tight">
+              {report.doctor?.hospitalName || "Remote Scan"}
             </p>
-            <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wider">
-              {report.doctor?.name
-                ? `Under Dr. ${report.doctor.name}`
-                : "Automated Screening"}
+            <p className="text-[11px] font-black text-sky-600 mt-2 uppercase tracking-[0.2em]">
+              {report.doctor?.name ? `Lead: Dr. ${report.doctor.name}` : "Automated Neural Screening"}
             </p>
           </div>
         </div>
 
-        {/* Simplified Indicator List */}
-        <div className="mb-12">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">
-            Detailed Indicators
+        {/* Detailed Metrics Table */}
+        <div className="mb-16 relative z-10">
+          <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+            <div className="w-2 h-2 bg-sky-500 rounded-full" />
+            Biological Indicators
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-2">
             {Object.entries(report.ecgParameters).map(([key, param]) => (
               <div
                 key={key}
-                className="flex items-center justify-between py-4 border-b border-slate-50"
+                className="flex items-center justify-between py-5 border-b border-slate-100 group hover:bg-slate-50/50 px-2 transition-colors rounded-xl"
               >
                 <span className="text-xs font-black text-slate-600 uppercase tracking-tight">
                   {key.replace(/([A-Z])/g, " $1")}
                 </span>
                 <span
-                  className={`text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
+                  className={`text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border-2 ${
                     param.status === "Abnormal"
-                      ? "bg-orange-100 text-orange-600"
-                      : "bg-emerald-100 text-emerald-600"
+                      ? "bg-rose-50 text-rose-600 border-rose-100"
+                      : "bg-emerald-50 text-emerald-600 border-emerald-100"
                   }`}
                 >
                   {param.status}
@@ -183,42 +205,41 @@ export default function PatientReportPage() {
           </div>
         </div>
 
-        {/* Recommendations - High Contrast Dark Block */}
-        <div className="bg-slate-900 text-white p-10 rounded-[2rem] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-          <div className="flex items-center gap-3 mb-6 relative z-10">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Info className="text-blue-400" size={20} />
+        {/* Recommendations Block */}
+        <div className="bg-slate-900 text-white p-12 rounded-[3rem] shadow-2xl shadow-slate-900/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-[80px] -mr-32 -mt-32" />
+          <div className="flex items-center gap-4 mb-8 relative z-10">
+            <div className="p-3 bg-sky-500/20 rounded-2xl border border-sky-500/30">
+              <Info className="text-sky-400" size={20} />
             </div>
-            <h3 className="font-black uppercase tracking-[0.15em] text-sm">
-              Recommended Next Steps
+            <h3 className="font-black uppercase tracking-[0.2em] text-[11px]">
+              Specialist Recommendations
             </h3>
           </div>
-          <ul className="space-y-4 relative z-10">
+          <ul className="space-y-6 relative z-10">
             {report.recommendations.map((rec, i) => (
               <li
                 key={i}
-                className="flex gap-4 text-sm font-medium leading-relaxed text-slate-300"
+                className="flex gap-5 text-sm font-bold leading-relaxed text-slate-300 group"
               >
-                <span className="font-black text-blue-400 text-base">
-                  {i + 1}
+                <span className="font-black text-sky-400 text-lg italic transition-transform group-hover:scale-110">
+                  {String(i + 1).padStart(2, '0')}
                 </span>
-                {rec}
+                <p className="pt-1">{rec}</p>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-slate-100 text-center">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-loose">
-            Generated by CAD.AI Neural Engine v
-            {report.analysisResult.modelVersion} <br />
-            Digital Health Record • Physician Validation Required
+        <div className="mt-20 pt-10 border-t border-slate-50 text-center relative z-10">
+          <p className="text-[10px] text-slate-300 font-black uppercase tracking-[0.4em] leading-loose">
+            Digitally Verified Health Record • Version {report.analysisResult.modelVersion} <br />
+            Powered by Cardio-Neural AI Engine • Proprietary Diagnostic Framework
           </p>
         </div>
       </div>
 
-      {/* Global Print Overrides */}
+      {/* Advanced Print Overrides */}
       <style>{`
         @media print {
           .no-print { display: none !important; }
@@ -231,6 +252,11 @@ export default function PatientReportPage() {
             padding: 0 !important;
             margin: 0 !important;
           }
+          .rounded-[3.5rem] { border-radius: 0 !important; }
+          .bg-slate-900 { background: #0f172a !important; -webkit-print-color-adjust: exact; }
+          .text-white { color: white !important; -webkit-print-color-adjust: exact; }
+          .bg-rose-50 { background: #fff1f2 !important; -webkit-print-color-adjust: exact; }
+          .bg-emerald-50 { background: #ecfdf5 !important; -webkit-print-color-adjust: exact; }
         }
       `}</style>
     </div>
