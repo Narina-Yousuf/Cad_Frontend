@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Heart,
@@ -20,6 +21,7 @@ import toast from "react-hot-toast";
 export default function PatientDashboard() {
   const [data, setData] = useState<PatientDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchData = async (showLoading = false) => {
     if (showLoading) setLoading(true);
@@ -78,7 +80,7 @@ export default function PatientDashboard() {
 
             </div>
           </div>
-          <button className="bg-[#0ea5e9] hover:bg-[#6ec1e7] text-white px-10 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-xl shadow-slate-900/10 active:scale-95">
+          <button onClick={() => navigate("/patient/profile")} className="bg-[#0ea5e9] hover:bg-[#6ec1e7] text-white px-10 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-xl shadow-slate-900/10 active:scale-95">
             Update Medical Profile
           </button>
         </div>
@@ -124,12 +126,13 @@ export default function PatientDashboard() {
             </p>
           </div>
           <div className="flex gap-4">
-            <button className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-[#0ea5e9] hover:bg-white transition-all shadow-sm">
+            <button title="View History" onClick={() => navigate("/patient/history")} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-[#0ea5e9] hover:bg-white transition-all shadow-sm">
               <History className="w-5 h-5" />
             </button>
-            <button className="p-4 bg-[#0ea5e9]/5 border border-[#0ea5e9]/10 text-[#0ea5e9] rounded-2xl hover:bg-[#0ea5e9] hover:text-white transition-all shadow-sm">
+            <button title="Upload ECG" onClick={() => navigate("/patient/upload")} className="p-4 bg-[#0ea5e9]/5 border border-[#0ea5e9]/10 text-[#0ea5e9] rounded-2xl hover:bg-[#0ea5e9] hover:text-white transition-all shadow-sm">
               <Upload className="w-5 h-5" />
             </button>
+            
           </div>
         </div>
 
@@ -175,7 +178,7 @@ export default function PatientDashboard() {
                     <span className="text-[9px] font-black text-slate-400">{activity.confidence}</span>
                   </div>
                 </div>
-                <button className="p-3 bg-slate-50 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-all border border-slate-100 group-hover:shadow-lg">
+                <button title="View Result" onClick={() => navigate(`/patient/result/${activity.ecgId}`)} className="p-3 bg-slate-50 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-all border border-slate-100 group-hover:shadow-lg">
                   <ArrowUpRight size={18} />
                 </button>
               </div>

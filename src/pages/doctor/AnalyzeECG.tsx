@@ -40,7 +40,7 @@ export default function AnalyzeECG() {
         const checkResult = async () => {
           try {
             const data = await getAnalysisResult(id);
-            if (data.ecg.status === "COMPLETED") {
+            if (data?.ecg?.status === "COMPLETED" || data?.result) {
               setProgress(100);
               setStatus("Analysis Complete!");
               setTimeout(() => {

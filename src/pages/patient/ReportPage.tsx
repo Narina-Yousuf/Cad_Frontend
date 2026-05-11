@@ -159,9 +159,7 @@ export default function PatientReportPage() {
             <p className="text-2xl font-black text-slate-900 italic uppercase tracking-tight">
               {report.patientInfo.name}
             </p>
-            <p className="text-[11px] font-black text-sky-600 mt-2 uppercase tracking-[0.2em]">
-              {report.patientInfo.age} Years • {report.patientInfo.gender}
-            </p>
+            
           </div>
           <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">

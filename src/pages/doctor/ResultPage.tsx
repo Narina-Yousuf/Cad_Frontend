@@ -36,7 +36,18 @@ export default function ResultPage() {
     if (!id) return;
     setIsGenerating(true);
     try {
-      const report = await generateReport(id);
+      const analysisId = data?.result?.id;
+      if (!analysisId) throw new Error("No analysis ID");
+      
+      let report;
+      try {
+        report = await generateReport(analysisId);
+      } catch {
+        // Report already exists - fetch it
+        const api = (await import("../../services/api")).default;
+        const reportRes = await api.get(`/api/reports/analysis/${analysisId}`);
+        report = reportRes.data.data.report;
+      }
       const rolePath = user?.role === "DOCTOR" ? "doctor" : "patient";
       navigate(`/${rolePath}/report/${report.id}`);
     } catch (error) {
@@ -126,7 +137,7 @@ export default function ResultPage() {
       {/* Clinical Indicators Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "ST Depression", value: data.result.stDepression, abnormal: isCAD },
+          { label: "ST Depression", value: data.result.stDepression?.startsWith("{") ? (isCAD ? "Detected" : "Normal") : (data.result.stDepression || "Normal"), abnormal: isCAD },
           { label: "T-Wave Inversion", value: data.result.tWaveInversion, abnormal: isCAD },
           { label: "QRS Duration", value: data.result.qrsDuration, abnormal: false },
           { label: "Heart Rate", value: `${data.result.heartRate} BPM`, abnormal: false },

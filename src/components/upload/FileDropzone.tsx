@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Upload, AlertCircle, FileText } from "lucide-react";
 
 interface FileDropzoneProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect: (files: File[]) => void;
   error?: string;
 }
 
@@ -11,6 +11,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   error,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -45,8 +46,13 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       <input
         type="file"
         className="absolute inset-0 opacity-0 cursor-pointer z-10"
-        onChange={(e) => e.target.files?.[0] && onFileSelect(e.target.files[0])}
-        accept=".csv,.mat,.txt"
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            onFileSelect(Array.from(e.target.files));
+          }
+        }}
+        accept=".hea,.dat"
+        multiple
       />
 
       <div className="flex flex-col items-center">
@@ -67,7 +73,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
 
         {/* File Extension Badges */}
         <div className="mt-8 flex gap-2 justify-center">
-          {[".CSV", ".MAT", ".TXT"].map((ext) => (
+          {[".HEA"].map((ext) => (
             <span
               key={ext}
               className="text-[9px] font-black tracking-[0.2em] bg-white border border-slate-100 px-4 py-2 rounded-xl text-slate-400 shadow-sm"

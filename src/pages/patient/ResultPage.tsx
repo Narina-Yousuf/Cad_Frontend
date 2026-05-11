@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ShieldCheck,
-  AlertCircle,
-  FileText,
-  ArrowLeft,
-  Info,
-  Heart,
-  ChevronRight,
-  Loader2,
-  Activity,
-  Zap
+  ShieldCheck, AlertCircle, FileText, ArrowLeft, Info,
+  Heart, ChevronRight, Loader2, Activity, Zap
 } from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, ResponsiveContainer,
+  Tooltip, CartesianGrid
+} from "recharts";
 import { getAnalysisResult } from "../../services/analysis.service";
 import type { ECGResultData } from "../../types/analysis.types";
+
+const LEAD_COLORS: Record<string, string> = {
+  I: "#0ea5e9", II: "#6366f1", III: "#8b5cf6",
+  aVR: "#ec4899", aVL: "#f59e0b", aVF: "#10b981",
+  V1: "#ef4444", V2: "#f97316", V3: "#eab308",
+  V4: "#22c55e", V5: "#14b8a6", V6: "#3b82f6",
+};
 
 export default function PatientResultPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState<ECGResultData | null>(null);
+  const [selectedLead, setSelectedLead] = useState("II");
 
   useEffect(() => {
     if (id) getAnalysisResult(id).then(setData);
@@ -39,9 +43,22 @@ export default function PatientResultPage() {
 
   const isCAD = data.result.isCADDetected;
   const statusColor = isCAD ? "text-rose-500" : "text-emerald-500";
-  const bgGradient = isCAD
-    ? "from-rose-500 to-rose-700"
-    : "from-[#0ea5e9] to-[#2563eb]";
+  const bgGradient = isCAD ? "from-rose-500 to-rose-700" : "from-[#0ea5e9] to-[#2563eb]";
+
+  // ECG signal data for chart
+  let ecgSignals: any = null;
+  try {
+    const raw = (data.result as any).stDepression;
+    if (raw && raw.startsWith("{")) {
+      ecgSignals = JSON.parse(raw);
+    }
+  } catch {}
+
+  const leadData = ecgSignals?.[selectedLead]
+    ? ecgSignals[selectedLead].map((val: number, i: number) => ({ t: i, v: val }))
+    : null;
+
+  const leadNames = Object.keys(LEAD_COLORS);
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8 bg-slate-50/50 min-h-screen animate-in fade-in duration-700 font-sans">
@@ -57,32 +74,21 @@ export default function PatientResultPage() {
       </button>
 
       {/* Hero Result Card */}
-      <div
-        className={`relative overflow-hidden p-12 rounded-[3.5rem] text-white shadow-2xl shadow-blue-900/20 bg-gradient-to-br ${bgGradient} group transition-all duration-500`}
-      >
-        {/* Abstract Background Decoration */}
+      <div className={`relative overflow-hidden p-12 rounded-[3.5rem] text-white shadow-2xl shadow-blue-900/20 bg-gradient-to-br ${bgGradient} group transition-all duration-500`}>
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-[100px] -mr-32 -mt-32 transition-transform duration-1000 group-hover:scale-125" />
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-black/5 rounded-full blur-[80px]" />
-
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="flex items-center gap-8 text-center md:text-left flex-col md:flex-row">
             <div className="p-6 bg-white/20 rounded-[2.5rem] backdrop-blur-2xl border border-white/30 shadow-2xl shadow-black/10">
-              {isCAD ? (
-                <AlertCircle size={56} className="animate-pulse" />
-              ) : (
-                <ShieldCheck size={56} />
-              )}
+              {isCAD ? <AlertCircle size={56} className="animate-pulse" /> : <ShieldCheck size={56} />}
             </div>
             <div className="space-y-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/70">
-                Diagnostic Outcome
-              </p>
+              <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/70">Diagnostic Outcome</p>
               <h1 className="text-5xl font-black tracking-tighter uppercase italic leading-tight">
                 {isCAD ? "Alert: Action Needed" : "Cardiac Health: Stable"}
               </h1>
             </div>
           </div>
-
           <div className="bg-black/15 px-10 py-5 rounded-3xl border border-white/10 backdrop-blur-md flex flex-col items-center">
             <div className="flex items-center gap-2 mb-1">
               <Zap size={14} className="text-sky-300" />
@@ -90,36 +96,24 @@ export default function PatientResultPage() {
                 Inference v{data.result.modelVersion}
               </p>
             </div>
-            <p className="font-black text-2xl italic tracking-tighter">
-              VALIDATED
-            </p>
+            <p className="font-black text-2xl italic tracking-tighter">VALIDATED</p>
           </div>
         </div>
       </div>
 
-      {/* Metrics Architecture */}
+      {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Confidence Card */}
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-blue-900/5 text-center group transition-all hover:translate-y-[-4px]">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
-            Analysis Confidence
-          </p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Analysis Confidence</p>
           <p className="text-4xl font-black text-slate-900 tracking-tighter italic">
             {(data.result.confidenceScore * 100).toFixed(1)}%
           </p>
           <div className="w-16 h-1.5 bg-slate-100 mx-auto mt-6 rounded-full overflow-hidden">
-            <div
-              className="bg-[#0ea5e9] h-full rounded-full shadow-[0_0_10px_rgba(14,165,233,0.5)]"
-              style={{ width: `${data.result.confidenceScore * 100}%` }}
-            />
+            <div className="bg-[#0ea5e9] h-full rounded-full" style={{ width: `${data.result.confidenceScore * 100}%` }} />
           </div>
         </div>
-
-        {/* Heart Rate Card */}
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-blue-900/5 text-center group transition-all hover:translate-y-[-4px]">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
-            Waveform Heart Rate
-          </p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Waveform Heart Rate</p>
           <div className="flex items-center justify-center gap-3">
             <Heart size={24} className="text-rose-500 animate-pulse" fill="currentColor" fillOpacity={0.2} />
             <p className="text-4xl font-black text-slate-900 tracking-tighter italic">
@@ -128,12 +122,8 @@ export default function PatientResultPage() {
             </p>
           </div>
         </div>
-
-        {/* Status Card */}
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-blue-900/5 text-center group transition-all hover:translate-y-[-4px]">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
-            Neural Status
-          </p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Neural Status</p>
           <p className={`text-xl font-black uppercase tracking-[0.15em] italic ${statusColor}`}>
             {isCAD ? "Clinical Referral" : "Rhythm Normal"}
           </p>
@@ -143,33 +133,108 @@ export default function PatientResultPage() {
         </div>
       </div>
 
+      {/* ECG Signal Chart */}
+      {leadData && (
+        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-blue-900/5 space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">ECG Waveform</p>
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Lead {selectedLead}</h3>
+            </div>
+            {/* Lead Selector */}
+            <div className="flex flex-wrap gap-2">
+              {leadNames.map((lead) => (
+                <button
+                  key={lead}
+                  onClick={() => setSelectedLead(lead)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    selectedLead === lead
+                      ? "text-white shadow-lg"
+                      : "bg-slate-50 text-slate-400 hover:bg-slate-100"
+                  }`}
+                  style={selectedLead === lead ? { backgroundColor: LEAD_COLORS[lead] } : {}}
+                >
+                  {lead}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={leadData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="t" hide />
+                <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} />
+                <Tooltip
+                  contentStyle={{ background: "#0f172a", border: "none", borderRadius: "12px", color: "#fff", fontSize: "11px" }}
+                  formatter={(val: number) => [val.toFixed(4), "mV"]}
+                  labelFormatter={() => ""}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="v"
+                  stroke={LEAD_COLORS[selectedLead]}
+                  strokeWidth={1.5}
+                  dot={false}
+                  animationDuration={500}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest text-center">
+            500 samples · 100 Hz sampling rate · PTB-XL Dataset
+          </p>
+        </div>
+      )}
+
       {/* Advisory Banner */}
       <div className="bg-white p-8 rounded-[3rem] border border-slate-100 flex flex-col md:flex-row gap-6 items-center shadow-sm">
         <div className="p-4 bg-sky-50 rounded-[1.5rem] text-[#0ea5e9] border border-sky-100">
           <Info size={28} />
         </div>
         <div className="space-y-2 text-center md:text-left">
-          <h4 className="text-slate-900 font-black uppercase tracking-widest text-xs flex items-center justify-center md:justify-start gap-2">
-            Clinical Disclaimer
-          </h4>
+          <h4 className="text-slate-900 font-black uppercase tracking-widest text-xs">Clinical Disclaimer</h4>
           <p className="text-slate-400 text-[13px] leading-relaxed font-bold uppercase tracking-tight">
-            This AI screening identifies CAD morphological markers in ECG waveforms. 
-            It is a decision-support tool, not a diagnosis. 
+            This AI screening identifies CAD morphological markers in ECG waveforms.
+            It is a decision-support tool, not a diagnosis.
             <span className="text-slate-900 ml-1 italic font-black">Please share the Technical Report with a physician.</span>
           </p>
         </div>
       </div>
 
-      {/* Action Suite */}
+      {/* Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4">
         <button
-          onClick={() => navigate(`/patient/report/${id}`)}
+         onClick={async () => {
+          try {
+            const api = (await import("../../services/api")).default;
+            // Pehle ECG result fetch karo to get analysisResult ID
+            const resultRes = await api.get(`/api/ecg/${id}/result`);
+            const analysisResultId = resultRes.data.data.result.id;
+            
+            // Ab report generate karo ya existing fetch karo
+            try {
+              const { generateReport } = await import("../../services/report.service");
+              const report = await generateReport(analysisResultId);
+              navigate(`/patient/report/${report.id}`);
+            } catch {
+              // Report already exists - fetch it
+              const reportRes = await api.get(`/api/reports/analysis/${analysisResultId}`);
+              navigate(`/patient/report/${reportRes.data.data.report.id}`);
+            }
+          } catch (err) {
+            console.error("Report error:", err);
+            alert("There was an error loading the report!");
+          }
+        }}
           className="group bg-white border border-slate-100 text-slate-900 font-black py-6 rounded-[2rem] flex items-center justify-center gap-4 hover:border-sky-200 hover:bg-sky-50 transition-all shadow-xl shadow-blue-900/5 uppercase tracking-[0.2em] text-[10px]"
         >
-          <FileText size={20} className="text-[#0ea5e9] group-hover:scale-110 transition-transform" /> 
+          <FileText size={20} className="text-[#0ea5e9] group-hover:scale-110 transition-transform" />
           Access Medical Report
         </button>
-
         <button
           onClick={() => navigate("/patient/upload")}
           className="bg-slate-900 text-white font-black py-6 rounded-[2rem] hover:bg-slate-800 transition-all shadow-2xl shadow-slate-900/20 uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 active:scale-95"
@@ -179,4 +244,4 @@ export default function PatientResultPage() {
       </div>
     </div>
   );
-} 
+}

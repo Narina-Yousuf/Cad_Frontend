@@ -19,7 +19,7 @@ import toast from "react-hot-toast";
 export default function UploadECG() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [patients, setPatients] = useState<PatientListItem[]>([]);
   const [selectedPatient, setSelectedPatient] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -35,13 +35,13 @@ export default function UploadECG() {
   }, [user]);
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (files.length < 2) return toast.error("Please select both .hea and .dat files");
     if (user?.role === "DOCTOR" && !selectedPatient) {
       return toast.error("Please assign this signal to a patient");
     }
 
     const formData = new FormData();
-    formData.append("ecgFile", file);
+    files.forEach(f => formData.append("ecgFiles", f));
     if (selectedPatient) formData.append("patientId", selectedPatient);
 
     try {
@@ -84,7 +84,7 @@ export default function UploadECG() {
             {/* STEP 1: DROPZONE */}
             <div
               className={`bg-white rounded-[3rem] border-2 border-slate-100 shadow-2xl shadow-blue-900/5 transition-all duration-500 ${
-                file ? "opacity-40 scale-95 blur-[2px] pointer-events-none" : "scale-100 opacity-100"
+                files.length > 0 ? "opacity-40 scale-95 blur-[2px] pointer-events-none" : "scale-100 opacity-100"
               }`}
             >
               <div className="p-10">
@@ -98,17 +98,16 @@ export default function UploadECG() {
                 </div>
                 <FileDropzone
                   onFileSelect={(f) => {
-                    if (f.size > 50 * 1024 * 1024)
-                      toast.error("Maximum payload exceeded (50MB)");
-                    else setFile(f);
+                    const selected = Array.isArray(f) ? f : [f];
+                    setFiles(selected);
                   }}
-                  error={file ? undefined : "Format: .CSV, .MAT, .TXT"}
+                  error={files.length === 0 ? "Select .HEA + .DAT files" : undefined}
                 />
               </div>
             </div>
 
             {/* STEP 2: CONFIGURATION */}
-            {file && !uploading && (
+            {files.length > 0 && !uploading && (
               <div className="bg-white rounded-[3rem] border-2 border-[#0ea5e9]/30 shadow-2xl shadow-sky-500/10 animate-in slide-in-from-bottom-12 duration-500 overflow-hidden">
                 <div className="p-10 space-y-10">
                   <div className="flex items-center justify-between">
@@ -121,7 +120,7 @@ export default function UploadECG() {
                       </h3>
                     </div>
                     <button
-                      onClick={() => setFile(null)}
+                      onClick={() => setFiles([])}
                       className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-all"
                     >
                       <Trash2 size={20} />
@@ -133,12 +132,12 @@ export default function UploadECG() {
                       <FileUp className="text-[#0ea5e9]" size={24} />
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className="text-slate-900 font-black text-sm truncate uppercase tracking-tight">
-                        {file.name}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB • READY FOR BUFFER
-                      </p>
+                      {files.map((f, i) => (
+                        <div key={i}>
+                          <p className="text-slate-900 font-black text-sm truncate uppercase tracking-tight">{f.name}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{(f.size / 1024 / 1024).toFixed(2)} MB • READY</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
 

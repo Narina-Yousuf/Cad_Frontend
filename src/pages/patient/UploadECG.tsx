@@ -7,15 +7,15 @@ import toast from "react-hot-toast";
 
 export default function PatientUploadECG() {
   const navigate = useNavigate();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (files.length < 2) return;
 
     const formData = new FormData();
-    formData.append("ecgFile", file);
+    files.forEach((f) => formData.append("ecgFiles", f));
 
     try {
       setUploading(true);
@@ -45,32 +45,35 @@ export default function PatientUploadECG() {
       </div>
 
       <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl shadow-blue-900/10 border border-slate-100 relative overflow-hidden">
-        {/* Decorative Background Icon */}
         <UploadCloud className="absolute -right-8 -top-8 w-40 h-40 text-slate-50 opacity-50" />
 
         <div className="relative z-10">
           <FileDropzone
-            onFileSelect={(f) => setFile(f)}
-            error={file ? undefined : "Awaiting: .CSV, .MAT, or .TXT"}
+            onFileSelect={(f) => setFiles(f)}
+            error={files.length === 0 ? "Awaiting: .HEA + .DAT files" : undefined}
           />
 
-          {file && !uploading && (
-            <div className="mt-8 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-between animate-in slide-in-from-bottom-4">
-              <div className="flex items-center gap-4 truncate">
-                <div className="p-3 bg-sky-500 rounded-xl text-white">
-                  <FileType size={20} />
+          {files.length > 0 && !uploading && (
+            <div className="mt-8 space-y-3">
+              {files.map((f, i) => (
+                <div key={i} className="p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex items-center justify-between animate-in slide-in-from-bottom-4">
+                  <div className="flex items-center gap-4 truncate">
+                    <div className="p-3 bg-sky-500 rounded-xl text-white">
+                      <FileType size={18} />
+                    </div>
+                    <div className="truncate">
+                      <p className="text-sm font-black text-slate-900 truncate tracking-tight uppercase italic">
+                        {f.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        {(f.size / 1024).toFixed(1)} KB • Ready
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="truncate">
-                  <p className="text-sm font-black text-slate-900 truncate tracking-tight uppercase italic">
-                    {file.name}
-                  </p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    {(file.size / 1024).toFixed(1)} KB • Ready for processing
-                  </p>
-                </div>
-              </div>
+              ))}
               <button
-                onClick={() => setFile(null)}
+                onClick={() => setFiles([])}
                 className="text-rose-500 text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors"
               >
                 Reset
@@ -101,8 +104,8 @@ export default function PatientUploadECG() {
           ) : (
             <button
               onClick={handleUpload}
-              disabled={!file}
-              className="w-full mt-10 bg-[#0ea5e9] hover:bg-[#7cc9ed] text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-slate-900/20 disabled:cursor-not-allowed transition-all uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-3 active:scale-[0.98]"
+              disabled={files.length < 2}
+              className="w-full mt-10 bg-[#0ea5e9] hover:bg-[#7cc9ed] text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-slate-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-3 active:scale-[0.98]"
             >
               <CheckCircle2 size={18} /> Submit for Analysis
             </button>
@@ -110,8 +113,6 @@ export default function PatientUploadECG() {
         </div>
       </div>
 
-      {/* Technical Specifications Advisory */}
-      
       <div className="bg-sky-50/50 p-8 rounded-[2.5rem] border border-sky-100 flex flex-col md:flex-row gap-6 items-center">
         <div className="p-4 bg-white rounded-2xl shadow-sm border border-sky-100">
           <Info className="text-sky-500" size={24} />
@@ -121,9 +122,8 @@ export default function PatientUploadECG() {
             Data Requirements
           </h4>
           <p className="text-slate-400 text-[11px] leading-relaxed font-bold uppercase tracking-tight">
-            For optimal accuracy, ensure your signal is sampled at minimum 
-            <span className="text-sky-600 mx-1">250Hz</span> and contains at least 
-            <span className="text-sky-600 mx-1">10 seconds</span> of continuous Lead II recording.
+            Please select both <span className="text-sky-600 mx-1">.HEA</span> and
+            <span className="text-sky-600 mx-1">.DAT</span> files together for analysis.
           </p>
         </div>
       </div>

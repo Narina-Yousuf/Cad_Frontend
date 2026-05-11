@@ -23,6 +23,6 @@ export const getECGSignal = async (id: string): Promise<ECGSignal> => {
 };
 
 export const getPatients = async (): Promise<PatientListItem[]> => {
-  const { data } = await api.get("/api/doctor/patients");
-  return data.data;
+  const { data } = await api.get("/api/dashboard/doctor/patients");
+  return Array.isArray(data.data) ? data.data : [];
 };

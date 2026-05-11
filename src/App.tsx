@@ -18,6 +18,7 @@ import DoctorAnalyzeECG from "./pages/doctor/AnalyzeECG";
 import DoctorResultPage from "./pages/doctor/ResultPage";
 import DoctorReportPage from "./pages/doctor/ReportPage";
 import DoctorHistory from "./pages/doctor/History";
+import PatientHistory from "./pages/patient/PatientHistory";
 import PatientMedicalHistory from "./pages/doctor/PatientHistory";
 
 // Patient Pages
@@ -27,7 +28,9 @@ import PatientSignalDisplay from "./pages/patient/SignalDisplay";
 import PatientAnalyzeECG from "./pages/patient/AnalyzeECG";
 import PatientResultPage from "./pages/patient/ResultPage";
 import PatientReportPage from "./pages/patient/ReportPage";
-
+import ProfilePage from "./pages/patient/ProfilePage";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 function App() {
   return (
     <BrowserRouter>
@@ -40,7 +43,9 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/doctor/login" element={<DoctorLogin />} />
           <Route path="/patient/login" element={<PatientLogin />} />
-
+          <Route path="/patient/profile" element={<ProfilePage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* Protected Routes with Sidebar Layout */}
           <Route element={<MainLayout />}>
             {/* Doctor Routes */}
@@ -84,7 +89,7 @@ function App() {
                 path="/patient/report/:id"
                 element={<PatientReportPage />}
               />
-              <Route path="/patient/history" element={<DoctorHistory />} />{" "}
+              <Route path="/patient/history" element={<PatientHistory />} />
               {/* Shared History Component */}
             </Route>
           </Route>

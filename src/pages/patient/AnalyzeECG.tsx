@@ -35,7 +35,7 @@ export default function PatientAnalyzeECG() {
         const check = async () => {
           try {
             const data = await getAnalysisResult(id);
-            if (data.ecg.status === "COMPLETED") {
+            if (data?.ecg?.status === "COMPLETED" || data?.result) {
               setProgress(100);
               setStatus("Diagnostic computation complete!");
               setTimeout(() => navigate(`/patient/result/${id}`), 1000);

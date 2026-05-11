@@ -14,8 +14,10 @@ import { getHistory } from "../../services/history.service";
 import type { HistoryRecord, HistoryFilters } from "../../types/history.types";
 import toast from "react-hot-toast";
 
+
 export default function History() {
   const navigate = useNavigate();
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -213,13 +215,29 @@ export default function History() {
                     </td>
                     <td className="px-8 py-8 text-right">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                        className="p-3 bg-white border border-slate-100 rounded-[1rem] text-slate-300 hover:text-[#0ea5e9] hover:border-[#0ea5e9]/30 transition-all shadow-sm group-hover:bg-white"
-                      >
-                        <MoreVertical size={16} />
-                      </button>
+  onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === record.ecgId ? null : record.ecgId); }}
+  className="p-3 bg-white border border-slate-100 rounded-[1rem] text-slate-300 hover:text-[#0ea5e9] hover:border-[#0ea5e9]/30 transition-all shadow-sm group-hover:bg-white"
+>
+  <MoreVertical size={16} />
+</button>
+{openMenu === record.ecgId && (
+  <div style={{position:"absolute",right:"2rem",zIndex:9999,background:"white",border:"1px solid #f1f5f9",borderRadius:"1rem",boxShadow:"0 20px 40px rgba(0,0,0,0.1)",width:"180px",overflow:"hidden"}} onClick={(e)=>e.stopPropagation()}>
+    <button onClick={()=>{setOpenMenu(null);navigate(`/doctor/result/${record.ecgId}`);}} style={{width:"100%",display:"flex",alignItems:"center",gap:"10px",padding:"14px 20px",fontSize:"10px",fontWeight:900,color:"#475569",textTransform:"uppercase",background:"none",border:"none",cursor:"pointer"}}>View Result</button>
+    
+    <button onClick={async ()=>{
+  setOpenMenu(null);
+  if(!confirm("Do you want to delete this record?")) return;
+  try {
+    const api = (await import("../../services/api")).default;
+    await api.delete(`/api/ecg/${record.ecgId}`);
+    setHistory(prev => prev.filter(h => h.ecgId !== record.ecgId));
+    toast.success("Record deleted!");
+  } catch {
+    toast.error("Could not delete!");
+  }
+}} style={{width:"100%",display:"flex",alignItems:"center",gap:"10px",padding:"14px 20px",fontSize:"10px",fontWeight:900,color:"#ef4444",textTransform:"uppercase",background:"none",border:"none",borderTop:"1px solid #f8fafc",cursor:"pointer"}}>Delete</button>
+  </div>
+)}
                     </td>
                   </tr>
                 ))
